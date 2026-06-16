@@ -1,7 +1,7 @@
 ---
 aap_job_templates:
   - name: "Validate Baseline"
-    organization: "Demo"
+    organization: "Default"
     project: "Baseline Validation"
     playbook: "playbooks/validate_baseline.yml"
     inventory: "Baseline Demo Inventory"
