@@ -1,5 +1,4 @@
 ---
 collections:
-  - name: ansible.builtin
   - name: ansible.platform
   - name: ansible.controller
