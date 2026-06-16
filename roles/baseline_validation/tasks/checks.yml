@@ -1,0 +1,33 @@
+---
+# Evaluate every check and collect results; never short-circuit on first failure.
+- name: Evaluate check — {{ item.name }}
+  ansible.builtin.set_fact:
+    baseline_results: >-
+      {{
+        baseline_results | default([]) + [{
+          'name':      item.name,
+          'found':     lookup('vars', '__bv_found') | string,
+          'threshold': item.threshold | string,
+          'unit':      item.unit,
+          'pass':      __bv_pass
+        }]
+      }}
+  vars:
+    __bv_found: "{{ item.fact_expr | trim }}"
+    __bv_pass: >-
+      {%- if item.operator == 'version_ge' -%}
+        {{ __bv_found is version(item.threshold, '>=') }}
+      {%- elif item.operator == 'ge' -%}
+        {{ __bv_found | float >= item.threshold | float }}
+      {%- elif item.operator == 'le' -%}
+        {{ __bv_found | float <= item.threshold | float }}
+      {%- elif item.operator == 'eq' -%}
+        {{ __bv_found == item.threshold | string }}
+      {%- elif item.operator == 'version_eq' -%}
+        {{ __bv_found is version(item.threshold, '==') }}
+      {%- else -%}
+        false
+      {%- endif -%}
+  loop: "{{ baseline_checks }}"
+  loop_control:
+    label: "{{ item.name }}"

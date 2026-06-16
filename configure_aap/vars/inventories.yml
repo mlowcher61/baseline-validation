@@ -1,0 +1,5 @@
+---
+aap_inventories:
+  - name: "Baseline Demo Inventory"
+    organization: "Demo"
+    description: "Target RHEL hosts for baseline validation demo"

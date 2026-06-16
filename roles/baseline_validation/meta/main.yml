@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: mlowcher61
+  description: Validates a RHEL host against a defined technical baseline
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - baseline
+    - compliance
+    - rhel
+dependencies: []

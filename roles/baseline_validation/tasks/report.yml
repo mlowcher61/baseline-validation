@@ -1,0 +1,28 @@
+---
+- name: Set compliance summary facts
+  ansible.builtin.set_fact:
+    baseline_failed_checks: "{{ baseline_results | selectattr('pass', 'equalto', False) | list }}"
+    baseline_passed_checks: "{{ baseline_results | selectattr('pass', 'equalto', True) | list }}"
+
+- name: Print baseline validation report
+  ansible.builtin.debug:
+    msg: |
+      BASELINE VALIDATION — {{ inventory_hostname }}
+      =========================================
+      {% for r in baseline_results %}
+      {% if r.pass %}[ PASS ]{% else %}[ FAIL ]{% endif %} {{ '%-30s' | format(r.name) }}: {{ r.found }}  (min {{ r.threshold }}{% if r.unit %} {{ r.unit }}{% endif %}){% if not r.pass %}   <-- does not meet validated baseline{% endif %}
+
+      {% endfor %}
+      -----------------------------------------
+      {% if baseline_failed_checks | length == 0 %}
+      RESULT: COMPLIANT  (all {{ baseline_results | length }} checks passed)
+      {% else %}
+      RESULT: NON-COMPLIANT  ({{ baseline_failed_checks | length }} of {{ baseline_results | length }} checks failed)
+      {% endif %}
+
+- name: Fail non-compliant host
+  ansible.builtin.fail:
+    msg: "Host {{ inventory_hostname }} is NON-COMPLIANT. See report above."
+  when:
+    - baseline_fail_on_noncompliance | bool
+    - baseline_failed_checks | length > 0

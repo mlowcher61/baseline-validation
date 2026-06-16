@@ -1,0 +1,10 @@
+---
+aap_projects:
+  - name: "Baseline Validation"
+    organization: "Demo"
+    scm_type: git
+    scm_url: "https://github.com/mlowcher61/baseline-validation.git"
+    scm_branch: main
+    scm_clean: true
+    scm_delete_on_update: false
+    update_on_launch: true

@@ -1,0 +1,21 @@
+---
+- name: Gather facts
+  ansible.builtin.setup:
+
+- name: Derive root filesystem size in GB
+  ansible.builtin.set_fact:
+    root_fs_size_gb: >-
+      {{
+        (ansible_facts['mounts']
+          | selectattr('mount', 'equalto', '/')
+          | map(attribute='size_total')
+          | first
+          | int / 1073741824
+        ) | round(1)
+      }}
+
+- name: Evaluate baseline checks
+  ansible.builtin.import_tasks: checks.yml
+
+- name: Render report and gate on compliance
+  ansible.builtin.import_tasks: report.yml

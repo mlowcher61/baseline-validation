@@ -1,0 +1,4 @@
+---
+aap_organizations:
+  - name: "Demo"
+    description: "Demo organization for baseline validation POC"

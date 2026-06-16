@@ -1,0 +1,55 @@
+---
+aap_job_templates:
+  - name: "Validate Baseline"
+    organization: "Demo"
+    project: "Baseline Validation"
+    playbook: "playbooks/validate_baseline.yml"
+    inventory: "Baseline Demo Inventory"
+    credentials:
+      - "Baseline Demo Machine Credential"
+    ask_variables_on_launch: false
+    survey_enabled: true
+    survey_spec:
+      name: "Baseline Validation Survey"
+      description: "Override default baseline thresholds live for demo purposes"
+      spec:
+        - question_name: "Minimum OS version (e.g. 9.0)"
+          question_description: "Minimum RHEL major.minor version required"
+          variable: baseline_os_min_version
+          type: text
+          default: "9.0"
+          required: true
+
+        - question_name: "Minimum CPU cores"
+          question_description: "Minimum number of virtual CPU cores required"
+          variable: baseline_cpu_min_cores
+          type: integer
+          default: 2
+          min: 1
+          required: true
+
+        - question_name: "Minimum memory (GB)"
+          question_description: "Minimum total RAM in gigabytes"
+          variable: baseline_mem_min_gb
+          type: integer
+          default: 4
+          min: 1
+          required: true
+
+        - question_name: "Minimum root filesystem (GB)"
+          question_description: "Minimum root filesystem capacity in gigabytes"
+          variable: baseline_root_fs_min_gb
+          type: integer
+          default: 40
+          min: 1
+          required: true
+
+        - question_name: "Fail job on non-compliance?"
+          question_description: "Set to true to fail the job when checks fail; false for report-only"
+          variable: baseline_fail_on_noncompliance
+          type: multiplechoice
+          default: "true"
+          choices:
+            - "true"
+            - "false"
+          required: true
