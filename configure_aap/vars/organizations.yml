@@ -1,4 +1,4 @@
 ---
 aap_organizations:
-  - name: "Demo"
-    description: "Demo organization for baseline validation POC"
+  - name: "Default"
+    description: "Default organization for baseline validation POC"
