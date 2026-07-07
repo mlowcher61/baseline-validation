@@ -11,25 +11,25 @@ baseline_fail_on_noncompliance: true
 # Data-driven check definitions — add new checks here, no logic changes needed
 baseline_checks:
   - name: "OS version"
-    fact_expr: "ansible_facts['distribution_version']"
+    fact_expr: "{{ ansible_facts['distribution_version'] }}"
     operator: "version_ge"
     threshold: "{{ baseline_os_min_version }}"
     unit: ""
 
   - name: "CPU cores"
-    fact_expr: "ansible_facts['processor_vcpus'] | int"
+    fact_expr: "{{ ansible_facts['processor_vcpus'] | int }}"
     operator: "ge"
     threshold: "{{ baseline_cpu_min_cores | int }}"
     unit: "cores"
 
   - name: "Memory"
-    fact_expr: "(ansible_facts['memtotal_mb'] / 1024) | round(1)"
+    fact_expr: "{{ (ansible_facts['memtotal_mb'] / 1024) | round(1) }}"
     operator: "ge"
     threshold: "{{ baseline_mem_min_gb | float }}"
     unit: "GB"
 
   - name: "Root filesystem capacity"
-    fact_expr: "root_fs_size_gb"
+    fact_expr: "{{ root_fs_size_gb }}"
     operator: "ge"
     threshold: "{{ baseline_root_fs_min_gb | int }}"
     unit: "GB"
