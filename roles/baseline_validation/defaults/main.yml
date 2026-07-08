@@ -18,6 +18,16 @@ baseline_fail_on_noncompliance: true
 # checks are filtered out of the report.
 baseline_security_checks_enabled: "yes"
 
+# Safe defaults for the SSH facts gathered by gather_ssh_facts.yml. These must be
+# defined even when that task is skipped (security bypassed): Ansible templates the
+# entire baseline_checks list — including the security checks' fact_expr — whenever
+# the evaluation loop runs, so the referenced vars cannot be undefined. When security
+# is enabled, gather_ssh_facts.yml set_fact overrides these with the real values.
+bv_ssh_enabled: false
+bv_ssh_active: false
+bv_sshd_password_auth: "unknown"
+bv_sshd_permit_root: "unknown"
+
 # Data-driven check definitions — add new checks here, no logic changes needed.
 # `category` tags a check so groups (e.g. security) can be filtered as a set.
 baseline_checks:
