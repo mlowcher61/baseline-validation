@@ -13,45 +13,58 @@ baseline_ssh_permit_root_expected: "no"     # PermitRootLogin strictly no
 # Set to false to report only without failing the job
 baseline_fail_on_noncompliance: true
 
-# Data-driven check definitions — add new checks here, no logic changes needed
+# Set to "no" (via the survey) to bypass the SSH security baseline checks entirely.
+# When disabled, the privileged SSH fact-gathering is skipped and the security
+# checks are filtered out of the report.
+baseline_security_checks_enabled: "yes"
+
+# Data-driven check definitions — add new checks here, no logic changes needed.
+# `category` tags a check so groups (e.g. security) can be filtered as a set.
 baseline_checks:
   - name: "OS version"
+    category: "system"
     fact_expr: "{{ ansible_facts['distribution_version'] }}"
     operator: "version_ge"
     threshold: "{{ baseline_os_min_version }}"
     unit: ""
 
   - name: "CPU cores"
+    category: "system"
     fact_expr: "{{ ansible_facts['processor_vcpus'] | int }}"
     operator: "ge"
     threshold: "{{ baseline_cpu_min_cores | int }}"
     unit: "cores"
 
   - name: "Memory"
+    category: "system"
     fact_expr: "{{ (ansible_facts['memtotal_mb'] / 1024) | round(1) }}"
     operator: "ge"
     threshold: "{{ baseline_mem_min_gb | float }}"
     unit: "GB"
 
   - name: "Root filesystem capacity"
+    category: "system"
     fact_expr: "{{ root_fs_size_gb }}"
     operator: "ge"
     threshold: "{{ baseline_root_fs_min_gb | int }}"
     unit: "GB"
 
   - name: "SSH service"
+    category: "security"
     fact_expr: "{{ 'yes' if (bv_ssh_enabled | bool and bv_ssh_active | bool) else 'no' }}"
     operator: "eq"
     threshold: "{{ baseline_ssh_service_expected }}"
     unit: "(enabled+running)"
 
   - name: "Password authentication disabled"
+    category: "security"
     fact_expr: "{{ bv_sshd_password_auth }}"
     operator: "eq"
     threshold: "{{ baseline_ssh_password_auth_expected }}"
     unit: ""
 
   - name: "Root login disabled"
+    category: "security"
     fact_expr: "{{ bv_sshd_permit_root }}"
     operator: "eq"
     threshold: "{{ baseline_ssh_permit_root_expected }}"

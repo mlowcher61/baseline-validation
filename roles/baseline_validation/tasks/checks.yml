@@ -29,6 +29,8 @@
       {%- else -%}
         false
       {%- endif -%}
-  loop: "{{ baseline_checks }}"
+  loop: >-
+    {{ baseline_checks if (baseline_security_checks_enabled | bool)
+       else (baseline_checks | rejectattr('category', 'equalto', 'security') | list) }}
   loop_control:
     label: "{{ item.name }}"

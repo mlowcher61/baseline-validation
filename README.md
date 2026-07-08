@@ -11,6 +11,8 @@ When you run the **Validate Baseline** job template against a RHEL host, the pla
 3. Prints a report in the job output — every check, pass or fail, with the actual value found.
 4. Fails the job (red in AAP) if any check fails, so you get an immediate visual signal.
 
+The three SSH security controls can be bypassed at launch via the **Security** survey question — see [Bypassing the security checks](#bypassing-the-security-checks).
+
 Example output for a non-compliant host:
 
 ```
@@ -82,7 +84,8 @@ ansible-playbook configure_aap/configure.yml
 
 1. Navigate to **Templates → Validate Baseline** and click **Launch**.
 2. The survey lets you set threshold values live — raise a threshold above what the host has to force a NON-COMPLIANT result.
-3. Watch the job output for the report.
+3. The **Security** survey question toggles the SSH security checks — select **no** to bypass them (see below).
+4. Watch the job output for the report.
 
 ## Changing the baseline
 
@@ -110,11 +113,14 @@ The check engine is data-driven. To add a new check, add one entry to the `basel
 
 ```yaml
 - name: "Swap space"
+  category: "system"
   fact_expr: "(ansible_facts['swaptotal_mb'] / 1024) | round(1)"
   operator: "ge"
   threshold: "{{ baseline_swap_min_gb | default(2) }}"
   unit: "GB"
 ```
+
+Set `category: "security"` for a check that should be skipped when the **Security** survey question is set to `no`; use `"system"` (or any other value) otherwise.
 
 No changes to any task file are required.
 
@@ -123,6 +129,17 @@ Supported operators: `ge` (≥), `le` (≤), `eq` (=), `version_ge`, `version_eq
 ## Fail vs report-only mode
 
 By default the job fails (red) when a host is non-compliant. Set `baseline_fail_on_noncompliance: false` to switch to report-only mode. This variable is also exposed on the survey so you can toggle it live during a demo.
+
+## Bypassing the security checks
+
+The three SSH security controls (SSH service, password authentication, root login) can be skipped entirely — useful when validating hosts where SSH facts can't be gathered, or where privilege escalation isn't available.
+
+Set `baseline_security_checks_enabled: "no"` (default `"yes"`), exposed on the survey as the **Security** question. When disabled:
+
+- The privileged SSH fact-gathering (`sshd -T`, service state — all `become: true`) is **skipped**, so no root access is needed.
+- The three security checks are **filtered out of the report** rather than run and ignored — the report shows only the four system checks.
+
+Each check in `baseline_checks` carries a `category` (`system` or `security`); the bypass filters on `category: security`, so any security check you add later is covered automatically.
 
 ## Testing locally
 
@@ -143,6 +160,11 @@ ansible-playbook playbooks/validate_baseline.yml -i localhost, \
   -e ansible_connection=local \
   -e baseline_mem_min_gb=9999 \
   -e baseline_fail_on_noncompliance=false
+
+# Bypass the SSH security checks (system checks only)
+ansible-playbook playbooks/validate_baseline.yml -i localhost, \
+  -e ansible_connection=local \
+  -e baseline_security_checks_enabled=no
 ```
 
 ## Lint

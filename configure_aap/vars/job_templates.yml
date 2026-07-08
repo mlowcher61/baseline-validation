@@ -53,3 +53,13 @@ aap_job_templates:
             - "true"
             - "false"
           required: true
+
+        - question_name: "Security"
+          question_description: "Run the SSH security baseline checks? Select no to bypass them"
+          variable: baseline_security_checks_enabled
+          type: multiplechoice
+          default: "yes"
+          choices:
+            - "yes"
+            - "no"
+          required: true
