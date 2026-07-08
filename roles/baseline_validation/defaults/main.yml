@@ -5,6 +5,11 @@ baseline_cpu_min_cores: 2
 baseline_mem_min_gb: 4
 baseline_root_fs_min_gb: 40
 
+# Security baseline expectations (override via survey if needed)
+baseline_ssh_service_expected: "yes"        # sshd enabled at boot AND running
+baseline_ssh_password_auth_expected: "no"   # PasswordAuthentication disabled
+baseline_ssh_permit_root_expected: "no"     # PermitRootLogin strictly no
+
 # Set to false to report only without failing the job
 baseline_fail_on_noncompliance: true
 
@@ -33,3 +38,21 @@ baseline_checks:
     operator: "ge"
     threshold: "{{ baseline_root_fs_min_gb | int }}"
     unit: "GB"
+
+  - name: "SSH service"
+    fact_expr: "{{ 'yes' if (bv_ssh_enabled | bool and bv_ssh_active | bool) else 'no' }}"
+    operator: "eq"
+    threshold: "{{ baseline_ssh_service_expected }}"
+    unit: "(enabled+running)"
+
+  - name: "Password authentication disabled"
+    fact_expr: "{{ bv_sshd_password_auth }}"
+    operator: "eq"
+    threshold: "{{ baseline_ssh_password_auth_expected }}"
+    unit: ""
+
+  - name: "Root login disabled"
+    fact_expr: "{{ bv_sshd_permit_root }}"
+    operator: "eq"
+    threshold: "{{ baseline_ssh_permit_root_expected }}"
+    unit: ""

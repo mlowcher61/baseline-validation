@@ -9,6 +9,7 @@
           'found':     lookup('vars', '__bv_found') | string,
           'threshold': item.threshold | string,
           'unit':      item.unit,
+          'operator':  item.operator,
           'pass':      __bv_pass
         }]
       }}

@@ -9,8 +9,9 @@
     msg: |
       BASELINE VALIDATION — {{ inventory_hostname }}
       =========================================
+      {% set _labels = {'ge': 'min', 'version_ge': 'min', 'le': 'max', 'eq': 'expected', 'version_eq': 'expected'} %}
       {% for r in baseline_results %}
-      {% if r.pass %}[ PASS ]{% else %}[ FAIL ]{% endif %} {{ '%-30s' | format(r.name) }}: {{ r.found }}  (min {{ r.threshold }}{% if r.unit %} {{ r.unit }}{% endif %}){% if not r.pass %}   <-- does not meet validated baseline{% endif %}
+      {% if r.pass %}[ PASS ]{% else %}[ FAIL ]{% endif %} {{ '%-32s' | format(r.name) }}: {{ r.found }}  ({{ _labels[r.operator | default('ge')] | default('min') }} {{ r.threshold }}{% if r.unit %} {{ r.unit }}{% endif %}){% if not r.pass %}   <-- does not meet validated baseline{% endif %}
 
       {% endfor %}
       -----------------------------------------

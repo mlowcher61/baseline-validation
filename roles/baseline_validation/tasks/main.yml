@@ -14,6 +14,9 @@
         ) | round(1)
       }}
 
+- name: Gather SSH security facts
+  ansible.builtin.import_tasks: gather_ssh_facts.yml
+
 - name: Evaluate baseline checks
   ansible.builtin.import_tasks: checks.yml
 

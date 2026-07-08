@@ -1,0 +1,32 @@
+---
+# Gather SSH security signals that are NOT present in standard ansible_facts.
+# Requires privilege escalation: `sshd -T` and reliable service state need root.
+- name: Gather service facts
+  ansible.builtin.service_facts:
+  become: true
+
+- name: Resolve the sshd service unit name
+  ansible.builtin.set_fact:
+    __bv_ssh_unit: >-
+      {{ 'sshd.service' if 'sshd.service' in ansible_facts.services
+         else 'ssh.service' }}
+
+- name: Derive sshd enabled/active state
+  ansible.builtin.set_fact:
+    # Enabled at boot AND currently running — both must hold.
+    bv_ssh_enabled: "{{ ansible_facts.services[__bv_ssh_unit].status | default('') == 'enabled' }}"
+    bv_ssh_active: "{{ ansible_facts.services[__bv_ssh_unit].state | default('') == 'running' }}"
+
+- name: Read effective sshd configuration
+  # `sshd -T` prints the running effective config, accounting for compiled-in
+  # defaults, Include drop-ins, and Match blocks — unlike reading sshd_config.
+  ansible.builtin.command: sshd -T
+  register: __bv_sshd_t
+  changed_when: false
+  check_mode: false
+  become: true
+
+- name: Extract sshd hardening settings
+  ansible.builtin.set_fact:
+    bv_sshd_password_auth: "{{ __bv_sshd_t.stdout | regex_search('(?im)^passwordauthentication[ \\t]+(\\S+)', '\\1') | first | default('unknown') }}"
+    bv_sshd_permit_root: "{{ __bv_sshd_t.stdout | regex_search('(?im)^permitrootlogin[ \\t]+(\\S+)', '\\1') | first | default('unknown') }}"

@@ -6,8 +6,8 @@ An Ansible Automation Platform (AAP) solution that validates whether a RHEL host
 
 When you run the **Validate Baseline** job template against a RHEL host, the playbook:
 
-1. Gathers live facts from the target host.
-2. Compares four baseline parameters (OS version, CPU cores, memory, root filesystem) against configurable minimums.
+1. Gathers live facts from the target host, including SSH service state and effective `sshd` configuration.
+2. Compares the baseline parameters — OS version, CPU cores, memory, root filesystem, and three SSH security controls — against configurable expectations.
 3. Prints a report in the job output — every check, pass or fail, with the actual value found.
 4. Fails the job (red in AAP) if any check fails, so you get an immediate visual signal.
 
@@ -16,12 +16,15 @@ Example output for a non-compliant host:
 ```
 BASELINE VALIDATION — web01.example.com
 =========================================
-[ PASS ] CPU cores                     : 4    (min 2 cores)
-[ FAIL ] OS version                    : 8.6  (min 9.0)   <-- does not meet validated baseline
-[ PASS ] Memory                        : 8.0  (min 4 GB)
-[ PASS ] Root filesystem capacity      : 80   (min 40 GB)
+[ PASS ] CPU cores                       : 4    (min 2 cores)
+[ FAIL ] OS version                      : 8.6  (min 9.0)   <-- does not meet validated baseline
+[ PASS ] Memory                          : 8.0  (min 4 GB)
+[ PASS ] Root filesystem capacity        : 80   (min 40 GB)
+[ PASS ] SSH service                     : yes  (expected yes (enabled+running))
+[ PASS ] Password authentication disabled: no   (expected no)
+[ FAIL ] Root login disabled             : yes  (expected no)   <-- does not meet validated baseline
 -----------------------------------------
-RESULT: NON-COMPLIANT  (1 of 4 checks failed)
+RESULT: NON-COMPLIANT  (2 of 7 checks failed)
 ```
 
 ## Repository structure
@@ -37,6 +40,7 @@ baseline-validation/
 │   ├── meta/main.yml
 │   └── tasks/
 │       ├── main.yml                  # orchestration
+│       ├── gather_ssh_facts.yml      # SSH service + effective sshd config (needs become)
 │       ├── checks.yml                # data-driven evaluation loop
 │       └── report.yml                # render report + gate on compliance
 └── configure_aap/                    # stand up AAP objects for the demo
@@ -84,16 +88,21 @@ ansible-playbook configure_aap/configure.yml
 
 Default thresholds are in [`roles/baseline_validation/defaults/main.yml`](roles/baseline_validation/defaults/main.yml):
 
-| Check | Default minimum |
-|-------|----------------|
-| OS version | RHEL 9.0 |
-| CPU cores | 2 |
-| Memory | 4 GB |
-| Root filesystem | 40 GB |
+| Check | Default expectation | Variable |
+|-------|--------------------|----------|
+| OS version | RHEL 9.0 | `baseline_os_min_version` |
+| CPU cores | 2 | `baseline_cpu_min_cores` |
+| Memory | 4 GB | `baseline_mem_min_gb` |
+| Root filesystem | 40 GB | `baseline_root_fs_min_gb` |
+| SSH service | enabled at boot **and** running | `baseline_ssh_service_expected` |
+| Password authentication disabled | `no` | `baseline_ssh_password_auth_expected` |
+| Root login disabled | `no` (strict — `prohibit-password` fails) | `baseline_ssh_permit_root_expected` |
 
 You can override them:
 - **Permanently** — edit `defaults/main.yml` and commit.
 - **Per job run** — use the AAP survey (no code change needed).
+
+> **Privilege escalation required.** The SSH checks read the effective `sshd` config (`sshd -T`) and service state, which need root. The role runs those gather tasks with `become: true`, so the AAP **machine credential must permit privilege escalation** (e.g. passwordless sudo, or a sudo password supplied on the credential).
 
 ## Adding a new check
 
