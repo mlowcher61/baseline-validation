@@ -1,0 +1,16 @@
+---
+- name: "Derive C: drive capacity in GB"
+  ansible.builtin.set_fact:
+    win_c_drive_size_gb: >-
+      {{
+        (ansible_facts['mounts']
+          | selectattr('mount', 'equalto', 'C:')
+          | map(attribute='size_total')
+          | first
+          | int / 1073741824
+        ) | round(1)
+      }}
+
+- name: Gather Windows security facts
+  ansible.builtin.import_tasks: gather_windows_security_facts.yml
+  when: baseline_security_checks_enabled | bool

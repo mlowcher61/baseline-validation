@@ -1,0 +1,37 @@
+---
+# Gather Windows security signals not present in standard ansible_facts.
+# Uses PowerShell via ansible.windows.win_shell. No become/runas — this assumes
+# the WinRM account already holds local admin rights on the target (see README
+# "Windows prerequisites" section). If that assumption doesn't hold in your
+# environment, add `become: true` / `become_method: runas` to the three
+# win_shell tasks below.
+
+- name: Query Windows Firewall profile state
+  ansible.windows.win_shell: |
+    Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json
+  register: __bv_win_firewall
+  changed_when: false
+
+- name: Derive firewall-all-profiles-enabled fact
+  ansible.builtin.set_fact:
+    bv_win_firewall_all_enabled: "{{ (__bv_win_firewall.stdout | from_json) | map(attribute='Enabled') | select | list | length == 3 }}"
+
+- name: Query RDP Network Level Authentication setting
+  ansible.windows.win_shell: |
+    (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name UserAuthentication).UserAuthentication
+  register: __bv_win_rdp_nla
+  changed_when: false
+
+- name: Derive RDP NLA fact
+  ansible.builtin.set_fact:
+    bv_win_rdp_nla_enabled: "{{ __bv_win_rdp_nla.stdout | trim == '1' }}"
+
+- name: Query built-in Administrator account state
+  ansible.windows.win_shell: |
+    Get-LocalUser | Where-Object { $_.SID -like '*-500' } | Select-Object Enabled | ConvertTo-Json
+  register: __bv_win_local_admin
+  changed_when: false
+
+- name: Derive local Administrator account fact
+  ansible.builtin.set_fact:
+    bv_win_local_admin_enabled: "{{ (__bv_win_local_admin.stdout | from_json).Enabled | bool }}"
