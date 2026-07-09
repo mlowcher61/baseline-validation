@@ -1,12 +1,13 @@
 ---
 aap_job_templates:
-  - name: "Validate Baseline"
+  - name: "Validate Baseline - RHEL"
     organization: "Default"
     project: "Baseline Validation"
     playbook: "playbooks/validate_baseline.yml"
     inventory: "Baseline Demo Inventory"
     credentials:
       - "Baseline Demo Machine Credential"
+    limit: "rhel"
     ask_variables_on_launch: false
     survey_enabled: true
     survey_spec:
@@ -56,6 +57,71 @@ aap_job_templates:
 
         - question_name: "Security"
           question_description: "Run the SSH security baseline checks? Select no to bypass them"
+          variable: baseline_security_checks_enabled
+          type: multiplechoice
+          default: "yes"
+          choices:
+            - "yes"
+            - "no"
+          required: true
+
+  - name: "Validate Baseline - Windows"
+    organization: "Default"
+    project: "Baseline Validation"
+    playbook: "playbooks/validate_baseline.yml"
+    inventory: "Baseline Demo Inventory"
+    credentials:
+      - "Baseline Windows Machine Credential"
+    limit: "windows"
+    ask_variables_on_launch: false
+    survey_enabled: true
+    survey_spec:
+      name: "Baseline Validation Survey - Windows"
+      description: "Override default Windows baseline thresholds live for the demo"
+      spec:
+        - question_name: "Minimum OS build (e.g. 10.0.20348)"
+          question_description: "Minimum Windows build number required"
+          variable: baseline_win_os_min_build
+          type: text
+          default: "10.0.20348"
+          required: true
+
+        - question_name: "Minimum CPU cores"
+          question_description: "Minimum number of virtual CPU cores required"
+          variable: baseline_cpu_min_cores
+          type: integer
+          default: 2
+          min: 1
+          required: true
+
+        - question_name: "Minimum memory (GB)"
+          question_description: "Minimum total RAM in gigabytes"
+          variable: baseline_mem_min_gb
+          type: integer
+          default: 4
+          min: 1
+          required: true
+
+        - question_name: "Minimum C: drive capacity (GB)"
+          question_description: "Minimum C: drive capacity in gigabytes"
+          variable: baseline_root_fs_min_gb
+          type: integer
+          default: 40
+          min: 1
+          required: true
+
+        - question_name: "Fail job on non-compliance?"
+          question_description: "Set to true to fail the job when checks fail; false for report-only"
+          variable: baseline_fail_on_noncompliance
+          type: multiplechoice
+          default: "true"
+          choices:
+            - "true"
+            - "false"
+          required: true
+
+        - question_name: "Security"
+          question_description: "Run the Windows security checks? Select no to bypass them"
           variable: baseline_security_checks_enabled
           type: multiplechoice
           default: "yes"
