@@ -9,8 +9,9 @@ This directory contains everything needed to stand up the AAP objects for the ba
 | Organization | Demo |
 | Project | Baseline Validation |
 | Inventory | Baseline Demo Inventory |
-| Machine Credential | Baseline Demo Machine Credential |
-| Job Template + Survey | Validate Baseline |
+| Inventory Groups | `rhel`, `windows` (Windows group carries WinRM/CredSSP connection vars) |
+| Machine Credentials | Baseline Demo Machine Credential (RHEL), Baseline Windows Machine Credential |
+| Job Templates + Surveys | Validate Baseline - RHEL, Validate Baseline - Windows |
 
 ## Prerequisites
 
@@ -28,9 +29,9 @@ This directory contains everything needed to stand up the AAP objects for the ba
    # export CONTROLLER_OAUTH_TOKEN=yourtoken
    ```
 
-3. After `configure.yml` runs, open the AAP UI and add the actual SSH username/key to the **Baseline Demo Machine Credential** — the playbook creates the credential object but cannot store secrets.
+3. After `configure.yml` runs, open the AAP UI and add the actual SSH username/key to the **Baseline Demo Machine Credential**, and the CredSSP username/password to the **Baseline Windows Machine Credential** — the playbook creates the credential objects but cannot store secrets.
 
-4. Add your target RHEL hosts to the **Baseline Demo Inventory** in the AAP UI (or wire up a dynamic inventory source).
+4. Add your target RHEL hosts to the **rhel** group and Windows hosts to the **windows** group within the **Baseline Demo Inventory** in the AAP UI (or wire up a dynamic inventory source).
 
 ## Run
 
