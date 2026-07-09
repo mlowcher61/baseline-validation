@@ -1,0 +1,18 @@
+---
+# Inventory groups for Baseline Demo Inventory. Hosts are added manually in
+# the AAP UI (or via a dynamic source) — these entries create the group and,
+# for Windows, set the WinRM/CredSSP connection variables so hosts in that
+# group don't need per-host connection overrides.
+aap_groups:
+  - name: "rhel"
+    inventory: "Baseline Demo Inventory"
+    description: "RHEL hosts validated by Validate Baseline - RHEL"
+
+  - name: "windows"
+    inventory: "Baseline Demo Inventory"
+    description: "Windows hosts validated by Validate Baseline - Windows"
+    variables:
+      ansible_connection: winrm
+      ansible_winrm_transport: credssp
+      ansible_port: 5986
+      ansible_winrm_server_cert_validation: ignore
