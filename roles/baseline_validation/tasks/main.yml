@@ -1,22 +1,11 @@
 ---
-- name: Gather facts
-  ansible.builtin.setup:
+- name: Include RHEL fact-gathering
+  ansible.builtin.import_tasks: rhel.yml
+  when: ansible_facts['os_family'] == 'RedHat'
 
-- name: Derive root filesystem size in GB
-  ansible.builtin.set_fact:
-    root_fs_size_gb: >-
-      {{
-        (ansible_facts['mounts']
-          | selectattr('mount', 'equalto', '/')
-          | map(attribute='size_total')
-          | first
-          | int / 1073741824
-        ) | round(1)
-      }}
-
-- name: Gather SSH security facts
-  ansible.builtin.import_tasks: gather_ssh_facts.yml
-  when: baseline_security_checks_enabled | bool
+- name: Include Windows fact-gathering
+  ansible.builtin.import_tasks: windows.yml
+  when: ansible_facts['os_family'] == 'Windows'
 
 - name: Evaluate baseline checks
   ansible.builtin.import_tasks: checks.yml
