@@ -1,0 +1,18 @@
+---
+# Unlike RHEL's ansible.builtin.setup, ansible.windows.setup gathers no `mounts`
+# fact (or any disk/volume capacity), so the C: drive size must be queried via
+# PowerShell — the same approach gather_windows_security_facts.yml uses for other
+# Windows-only signals. The WinRM / local-admin assumptions noted in that file
+# apply to this win_shell task too.
+- name: "Query C: drive total capacity in bytes"
+  ansible.windows.win_shell: (Get-Volume -DriveLetter C).Size
+  register: __bv_win_c_drive
+  changed_when: false
+
+- name: "Derive C: drive capacity in GB"
+  ansible.builtin.set_fact:
+    win_c_drive_size_gb: "{{ (__bv_win_c_drive.stdout | trim | int / 1073741824) | round(1) }}"
+
+- name: Gather Windows security facts
+  ansible.builtin.import_tasks: gather_windows_security_facts.yml
+  when: baseline_security_checks_enabled | bool

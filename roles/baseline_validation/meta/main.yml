@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: mlowcher61
-  description: Validates a RHEL host against a defined technical baseline
+  description: Validates a RHEL or Windows host against a technical baseline
   license: MIT
   min_ansible_version: "2.14"
   platforms:
@@ -9,8 +9,12 @@ galaxy_info:
       versions:
         - "8"
         - "9"
+    - name: Windows
+      versions:
+        - all
   galaxy_tags:
     - baseline
     - compliance
     - rhel
+    - windows
 dependencies: []

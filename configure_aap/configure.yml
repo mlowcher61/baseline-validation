@@ -20,6 +20,7 @@
     - vars/organizations.yml
     #- vars/projects.yml # Manually created the baseline-validation project in the AAP
     - vars/inventories.yml
+    - vars/groups.yml
     - vars/credentials.yml
     - vars/job_templates.yml
 
@@ -51,6 +52,15 @@
         description: "{{ item.description | default(omit) }}"
         state: present
       loop: "{{ aap_inventories }}"
+
+    - name: Create inventory groups
+      ansible.controller.group:
+        name: "{{ item.name }}"
+        inventory: "{{ item.inventory }}"
+        description: "{{ item.description | default(omit) }}"
+        variables: "{{ item.variables | default(omit) }}"
+        state: present
+      loop: "{{ aap_groups }}"
 
     - name: Create machine credentials (object only — set secrets in AAP UI)
       ansible.controller.credential:

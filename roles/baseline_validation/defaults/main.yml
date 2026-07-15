@@ -1,5 +1,7 @@
 ---
 # Baseline thresholds — all overridable via AAP survey variables
+
+# --- RHEL ---
 baseline_os_min_version: "9.0"
 baseline_cpu_min_cores: 2
 baseline_mem_min_gb: 4
@@ -13,24 +15,35 @@ baseline_ssh_permit_root_expected: "no"     # PermitRootLogin strictly no
 # Set to false to report only without failing the job
 baseline_fail_on_noncompliance: true
 
-# Set to "no" (via the survey) to bypass the SSH security baseline checks entirely.
-# When disabled, the privileged SSH fact-gathering is skipped and the security
-# checks are filtered out of the report.
+# Set to "no" (via the survey) to bypass the security baseline checks entirely,
+# for both RHEL (SSH) and Windows (Firewall/RDP/local admin).
 baseline_security_checks_enabled: "yes"
 
 # Safe defaults for the SSH facts gathered by gather_ssh_facts.yml. These must be
 # defined even when that task is skipped (security bypassed): Ansible templates the
-# entire baseline_checks list — including the security checks' fact_expr — whenever
-# the evaluation loop runs, so the referenced vars cannot be undefined. When security
+# entire checks list — including the security checks' fact_expr — whenever the
+# evaluation loop runs, so the referenced vars cannot be undefined. When security
 # is enabled, gather_ssh_facts.yml set_fact overrides these with the real values.
 bv_ssh_enabled: false
 bv_ssh_active: false
 bv_sshd_password_auth: "unknown"
 bv_sshd_permit_root: "unknown"
 
+# --- Windows ---
+baseline_win_os_min_build: "10.0.20348"     # Windows Server 2022
+baseline_win_firewall_expected: "yes"       # all firewall profiles enabled
+baseline_win_rdp_nla_expected: "yes"        # RDP NLA enforced
+baseline_win_local_admin_disabled_expected: "yes"   # built-in Administrator disabled
+
+# Safe defaults for the Windows facts gathered by gather_windows_security_facts.yml.
+# Same "must always be defined" rule as the bv_ssh_* facts above.
+bv_win_firewall_all_enabled: false
+bv_win_rdp_nla_enabled: false
+bv_win_local_admin_enabled: true
+
 # Data-driven check definitions — add new checks here, no logic changes needed.
 # `category` tags a check so groups (e.g. security) can be filtered as a set.
-baseline_checks:
+baseline_checks_rhel:
   - name: "OS version"
     category: "system"
     fact_expr: "{{ ansible_facts['distribution_version'] }}"
@@ -78,4 +91,54 @@ baseline_checks:
     fact_expr: "{{ bv_sshd_permit_root }}"
     operator: "eq"
     threshold: "{{ baseline_ssh_permit_root_expected }}"
+    unit: ""
+
+baseline_checks_windows:
+  - name: "OS build"
+    category: "system"
+    fact_expr: "{{ ansible_facts['distribution_version'] }}"
+    operator: "version_ge"
+    threshold: "{{ baseline_win_os_min_build }}"
+    unit: ""
+
+  - name: "CPU cores"
+    category: "system"
+    fact_expr: "{{ ansible_facts['processor_vcpus'] | int }}"
+    operator: "ge"
+    threshold: "{{ baseline_cpu_min_cores | int }}"
+    unit: "cores"
+
+  - name: "Memory"
+    category: "system"
+    fact_expr: "{{ (ansible_facts['memtotal_mb'] / 1024) | round(1) }}"
+    operator: "ge"
+    threshold: "{{ baseline_mem_min_gb | float }}"
+    unit: "GB"
+
+  - name: "C: drive capacity"
+    category: "system"
+    fact_expr: "{{ win_c_drive_size_gb }}"
+    operator: "ge"
+    threshold: "{{ baseline_root_fs_min_gb | int }}"
+    unit: "GB"
+
+  - name: "Windows Firewall enabled"
+    category: "security"
+    fact_expr: "{{ 'yes' if bv_win_firewall_all_enabled | bool else 'no' }}"
+    operator: "eq"
+    threshold: "{{ baseline_win_firewall_expected }}"
+    unit: "(all profiles)"
+
+  - name: "RDP Network Level Authentication"
+    category: "security"
+    fact_expr: "{{ 'yes' if bv_win_rdp_nla_enabled | bool else 'no' }}"
+    operator: "eq"
+    threshold: "{{ baseline_win_rdp_nla_expected }}"
+    unit: ""
+
+  - name: "Built-in Administrator account disabled"
+    category: "security"
+    fact_expr: "{{ 'yes' if not (bv_win_local_admin_enabled | bool) else 'no' }}"
+    operator: "eq"
+    threshold: "{{ baseline_win_local_admin_disabled_expected }}"
     unit: ""

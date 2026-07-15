@@ -1,5 +1,11 @@
 ---
 # Evaluate every check and collect results; never short-circuit on first failure.
+- name: Select platform checks list
+  ansible.builtin.set_fact:
+    __bv_active_checks: >-
+      {{ baseline_checks_windows if ansible_facts['os_family'] == 'Windows'
+         else baseline_checks_rhel }}
+
 - name: Evaluate check — {{ item.name }}
   ansible.builtin.set_fact:
     baseline_results: >-
@@ -30,7 +36,7 @@
         false
       {%- endif -%}
   loop: >-
-    {{ baseline_checks if (baseline_security_checks_enabled | bool)
-       else (baseline_checks | rejectattr('category', 'equalto', 'security') | list) }}
+    {{ __bv_active_checks if (baseline_security_checks_enabled | bool)
+       else (__bv_active_checks | rejectattr('category', 'equalto', 'security') | list) }}
   loop_control:
     label: "{{ item.name }}"
